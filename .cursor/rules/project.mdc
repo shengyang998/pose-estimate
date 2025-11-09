@@ -1,0 +1,104 @@
+# Project-Specific Rules: iOS Pose Estimation App
+
+## Project Intelligence
+
+### Critical Project Context
+This is an iOS pose estimation app with two core features:
+1. Real-time camera pose detection with skeleton overlay
+2. Video file analysis with skeleton overlay playback
+
+Uses Apple's Vision framework (VNDetectHumanBodyPoseRequest) for pose estimation - no external ML frameworks needed.
+
+### Development Priorities
+1. **Performance First**: Real-time mode must maintain 30+ FPS
+2. **Native Frameworks**: Use iOS native frameworks (Vision, AVFoundation) - no external dependencies
+3. **MVVM Architecture**: SwiftUI with clear separation of concerns
+4. **Async Processing**: ML inference on background threads
+
+### Key Technical Patterns
+
+#### Pose Estimation Pipeline
+```
+Frame → VNImageRequestHandler → VNDetectHumanBodyPoseRequest 
+→ VNRecognizedPointsObservation → Parsed Keypoints → Rendering
+```
+
+#### Architecture
+- ViewModels: Bridge between Views and Services (ObservableObject)
+- Services: CameraManager, VideoPlayerManager, PoseEstimator
+- Models: Keypoint, PoseModel (body joints and connections)
+- Rendering: SkeletonRenderer with coordinate transformation
+
+### Code Standards (User Preferences)
+- Use Assert statements for development/debugging exceptions
+- Follow SOLID principles (especially Open-Closed, Interface Segregation)
+- Proper error handling throughout
+- Comments only for complex logic
+- Never delete existing code comments
+- Respect prettier preferences
+- Performance optimization is critical
+
+### Testing
+Unit test command for iOS:
+```bash
+xcodebuild build-for-testing -scheme PoseEstimate -destination "platform=iOS Simulator,name=iPhone 16 Pro" -configuration Debug
+```
+
+### Required Info.plist Entries
+- NSCameraUsageDescription: "需要访问相机以实时显示姿态骨骼"
+- NSPhotoLibraryUsageDescription: "需要访问相册以分析视频中的姿态"
+
+### Common Patterns to Use
+
+#### Vision Framework Setup
+```swift
+let request = VNDetectHumanBodyPoseRequest()
+let handler = VNImageRequestHandler(cvPixelBuffer: buffer, options: [:])
+try? handler.perform([request])
+```
+
+#### AVCaptureSession for Camera
+```swift
+let session = AVCaptureSession()
+session.sessionPreset = .high
+let output = AVCaptureVideoDataOutput()
+output.setSampleBufferDelegate(self, queue: processingQueue)
+```
+
+#### SwiftUI with Combine
+```swift
+class CameraViewModel: ObservableObject {
+    @Published var detectedPose: PoseModel?
+    @Published var isProcessing: Bool = false
+}
+```
+
+### Performance Considerations
+- Process frames on background queue
+- Throttle frame rate if needed (process every Nth frame)
+- Reuse buffers and avoid allocations in hot path
+- Use Metal for rendering if SwiftUI Canvas is too slow
+- Release camera resources when backgrounded
+
+### Body Keypoints (Vision Framework)
+Vision detects 19 body points:
+- Head: nose, eyes, ears
+- Torso: neck, shoulders, hips
+- Arms: shoulders, elbows, wrists
+- Legs: hips, knees, ankles
+
+### Coordinate Transformation
+Vision returns normalized coordinates [0,1] with origin at bottom-left.
+Must transform to SwiftUI coordinates (origin top-left, pixel units).
+
+### Project Evolution Notes
+- Started: November 9, 2025
+- Current Phase: Initial setup, ready for implementation
+- Next Major Step: Implement core pose estimation and camera modules
+
+---
+
+## Memory Bank Notes
+- Always read ALL memory bank files when starting work
+- Update activeContext.md and progress.md frequently
+- Memory Bank is the source of truth after context resets
