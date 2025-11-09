@@ -53,16 +53,17 @@ enum VideoOrientation {
         case .portrait:
             // Portrait video: raw data is landscape, rotated 90° counter-clockwise
             // Vision coords are based on landscape raw data
-            // Transform: x,y in landscape -> y,(1-x) in portrait display
+            // Transform: x,y in landscape -> (1-y),(1-x) in portrait display
+            // Note: Need to mirror x-axis for correct left-right orientation
             result = CGPoint(
-                x: point.y * viewSize.width,
+                x: (1 - point.y) * viewSize.width,
                 y: (1 - point.x) * viewSize.height
             )
             
         case .portraitUpsideDown:
             // Portrait upside down: rotated 90° clockwise from landscape
             result = CGPoint(
-                x: (1 - point.y) * viewSize.width,
+                x: point.y * viewSize.width,
                 y: point.x * viewSize.height
             )
             
